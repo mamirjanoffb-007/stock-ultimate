@@ -1,1 +1,191 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>🏬 Stockslight Ultimate</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" onload="window.xlsxLoaded=true" onerror="window.xlsxLoaded=false"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" onload="window.chartLoaded=true" onerror="window.chartLoaded=false"></script>
+    <body>
+    <header>
+        <h1>🏬 Stockslight <span class="badge">Ultimate</span></h1>
+        <div class="actions" aria-label="Действия">
+            <button id="btnAdd" class="icon-btn primary" title="Добавить" aria-label="Добавить">
+                <svg viewBox="0 0 24 24"><path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2h6Z"/></svg>
+            </button>
+            <input id="fileImport" type="file" accept=".xlsx" style="display:none">
+            <button id="btnImport" class="icon-btn" title="Импорт .xlsx" aria-label="Импорт .xlsx">
+                <svg viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2Zm7-16-5 5h3v4h4v-4h3l-5-5Z"/></svg>
+            </button>
+            <button id="btnExport" class="icon-btn secondary" title="Экспорт .xlsx" aria-label="Экспорт .xlsx">
+                <svg viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2ZM12 4v9l3.5-3.5 1.4 1.4L12 16l-4.9-4.9 1.4-1.4L12 13V4h0Z"/></svg>
+            </button>
+            <button id="btnAnalytics" class="icon-btn secondary" title="Аналитика" aria-label="Аналитика">
+                <svg viewBox="0 0 24 24"><path d="M4 4v16h16v-2H6V4H4zm12 2v5h-3V6h3zm-5 4v5H8v-5h3zm5 4v4h-3v-4h3z"/></svg>
+            </button>
+        </div>
+    </header>
 
+    <section class="toolbar" aria-labelledby="filters">
+        <h2 id="filters" style="display:none">Фильтры и сортировка</h2>
+        <div class="search-row">
+            <input id="search" type="search" class="chip" placeholder="Поиск по наименованию" aria-label="Поиск по наименованию">
+            <button id="toggleFilters" class="icon-btn" title="Скрыть/показать фильтры" aria-label="Скрыть/показать фильтры">
+                <svg viewBox="0 0 24 24" id="hideIcon"><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/></svg>
+                <svg viewBox="0 0 24 24" id="showIcon" style="display:none;"><path d="M12 4c-4.41 0-8 3.59-8 8s3.59 8 8 8 8-3.59 8-8-3.59-8-8-8zm-1 14v-4h-4v-2h4V8h2v4h4v2h-4v4h-2z"/></svg>
+            </button>
+        </div>
+        <div id="filterSelects" class="filter-selects">
+            <select id="categoryFilter" title="Категория (только для фильтра)" aria-label="Фильтр по категории">
+                <option value="">Все категории</option>
+            </select>
+            <select id="sort" title="Сортировка (только отображение)" aria-label="Сортировка">
+                <option value="order-asc"># (по порядку)</option>
+                <option value="name-asc">Наименование (А-Я)</option>
+                <option value="name-desc">Наименование (Я-А)</option>
+                <option value="qty-desc">Количество (↓)</option>
+                <option value="qty-asc">Количество (↑)</option>
+                <option value="price-desc">Цена (↓)</option>
+                <option value="price-asc">Цена (↑)</option>
+                <option value="sum-desc">Сумма (↓)</option>
+                <option value="sum-asc">Сумма (↑)</option>
+            </select>
+            <select id="pageSize" title="На странице" aria-label="Количество на странице">
+                <option value="50">50</option>
+                <option value="100" selected>100</option>
+                <option value="200">200</option>
+                <option value="-1">Все</option>
+            </select>
+        </div>
+    </section>
+
+    <main>
+        <div class="table-wrap">
+            <table aria-describedby="summary">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Наименование товара</th>
+                        <th>Категория</th>
+                        <th class="right">Цена</th>
+                        <th class="right">Сумма</th>
+                        <th class="right">Количество</th>
+                        <th class="right">Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="grid"></tbody>
+            </table>
+        </div>
+        <div id="cards" class="cards"></div>
+        <div class="summary">
+            <div class="pager">
+                <button id="prevPage" class="icon-btn" title="Назад" aria-label="Назад">⟨</button>
+                <span id="pageInfo" style="min-width:80px;text-align:center;color:var(--ink2)">Стр. 1/1</span>
+                <button id="nextPage" class="icon-btn" title="Вперёд" aria-label="Вперёд">⟩</button>
+            </div>
+            <div>Показано: <b id="shownCount">0</b> из <b id="totalCount">0</b></div>
+            <div class="summary-stats">
+                <div>Всего штук: <b id="statQty" class="num">0</b></div>
+                <div>Общая сумма: <b id="statSum" class="num">0</b></div>
+            </div>
+        </div>
+    </main>
+
+    <div id="modalEdit" class="modal" role="dialog" aria-modal="true" aria-labelledby="dlgTitle" aria-describedby="editDesc">
+        <div class="dialog">
+            <h3 id="dlgTitle">Товар</h3>
+            <p id="editDesc" style="display:none">Форма для добавления или редактирования товара с полями: наименование, категория, количество и цена.</p>
+            <div class="field">
+                <label for="fName">Наименование товара</label>
+                <input id="fName" type="text" inputmode="text" class="chip" required>
+            </div>
+            <div class="field">
+                <label for="fCategory">Категория (для фильтра)</label>
+                <input id="fCategory" type="text" list="catList" inputmode="text" class="chip">
+                <datalist id="catList"></datalist>
+            </div>
+            <div class="row">
+                <div class="col field">
+                    <label for="fPrice">Цена (UZS)</label>
+                    <input id="fPrice" type="number" step="1" min="0" inputmode="numeric" class="chip" required>
+                </div>
+                <div class="col field">
+                    <label for="fQty">Количество</label>
+                    <input id="fQty" type="number" step="1" min="0" inputmode="numeric" class="chip" required>
+                </div>
+            </div>
+            <div class="field">
+                <label for="fSum">Сумма (UZS)</label>
+                <input id="fSum" type="number" step="1" min="0" inputmode="numeric" class="chip" disabled>
+            </div>
+            <div class="actions">
+                <button data-close class="icon-btn" title="Отмена" aria-label="Отмена">
+                    <svg viewBox="0 0 24 24"><path d="M18.3 5.71 12 12.01l-6.3-6.3-1.4 1.41L10.59 13.4l-6.3 6.3 1.41 1.41 6.3-6.29 6.29 6.29 1.41-1.41-6.3-6.3 6.3-6.29-1.41-1.41Z"/></svg>
+                </button>
+                <button id="btnSave" class="icon-btn primary" title="Сохранить" aria-label="Сохранить">
+                    <svg viewBox="0 0 24 24"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41Z"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalDelete" class="modal" role="dialog" aria-modal="true" aria-labelledby="delTitle" aria-describedby="delDesc">
+        <div class="dialog">
+            <h3 id="delTitle">Удалить позицию?</h3>
+            <p id="delDesc" style="display:none">Подтверждение удаления выбранной позиции из списка товаров.</p>
+            <div class="actions">
+                <button data-close class="icon-btn" title="Отмена" aria-label="Отмена">
+                    <svg viewBox="0 0 24 24"><path d="M18.3 5.71 12 12.01l-6.3-6.3-1.4 1.41L10.59 13.4l-6.3 6.3 1.41 1.41 6.3-6.29 6.29 6.29 1.41-1.41-6.3-6.3 6.3-6.29-1.41-1.41Z"/></svg>
+                </button>
+                <button id="btnDeleteYes" class="icon-btn danger" title="Удалить" aria-label="Удалить">
+                    <svg viewBox="0 0 24 24"><path d="M6 7h12l-1 14H7L6 7Zm3-3h6l1 2H8l1-2Z"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalPlus" class="modal" role="dialog" aria-modal="true" aria-labelledby="plusTitle" aria-describedby="plusDesc">
+        <div class="dialog">
+            <h3 id="plusTitle">Пополнить количество</h3>
+            <p id="plusDesc" style="display:none">Введите положительное или отрицательное число для изменения количества товара.</p>
+            <div class="field">
+                <label for="fAdd">Количество (положительное или отрицательное)</label>
+                <input id="fAdd" type="number" step="1" inputmode="numeric" class="chip" required>
+            </div>
+            <div class="actions">
+                <button data-close class="icon-btn" title="Отмена" aria-label="Отмена">
+                    <svg viewBox="0 0 24 24"><path d="M18.3 5.71 12 12.01l-6.3-6.3-1.4 1.41L10.59 13.4l-6.3 6.3 1.41 1.41 6.3-6.29 6.29 6.29 1.41-1.41-6.3-6.3 6.3-6.29-1.41-1.41Z"/></svg>
+                </button>
+                <button id="btnPlus" class="icon-btn primary" title="Добавить" aria-label="Дополнить">
+                    <svg viewBox="0 0 24 24"><path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2h6Z"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="analyticsModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="analyticsTitle" aria-describedby="analyticsDesc">
+        <div class="dialog">
+            <h3 id="analyticsTitle">Аналитика</h3>
+            <p id="analyticsDesc" style="display:none">Детальная аналитика товаров с графиками и таблицей.</p>
+            <div id="analyticsTabs"></div>
+            <div id="chartContainer">
+                <canvas id="barChart" width="300" height="200"></canvas>
+                <canvas id="pieChart" width="200" height="200"></canvas>
+            </div>
+            <div id="analyticsTable">
+                <table>
+                    <thead><tr><th>Товар</th><th>Сумма</th></tr></thead>
+                    <tbody id="topItems"></tbody>
+                </table>
+            </div>
+            <div class="actions">
+                <button id="closeAnalytics" class="icon-btn" title="Закрыть" aria-label="Закрыть">
+                    <svg viewBox="0 0 24 24"><path d="M18.3 5.71 12 12.01l-6.3-6.3-1.4 1.41L10.59 13.4l-6.3 6.3 1.41 1.41 6.3-6.29 6.29 6.29 1.41-1.41-6.3-6.3 6.3-6.29-1.41-1.41Z"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer>© 2025 Stockslight. Ultimate: тёмно-синий cascade-дизайн, продвинутая аналитика, поддержка отрицательных чисел в ➕.</footer>
+
+   
