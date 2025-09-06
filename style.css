@@ -1,1 +1,239 @@
+    <style>
+        :root {
+            --bg: #0a0f1e; --panel: #0f1730; --ink: #e7eaf3; --ink2: #a8b1c9; --border: #1e2a4a; --chip: #0b1224;
+            --accent: #22c55e; --accent2: #3b82f6; --danger: #ef4444; --row: #0b1222; --row2: #0c1427;
+        }
+        .qty-input {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            color: var(--ink);
+            padding: 8px 10px;
+            border-radius: 10px;
+            text-align: right;
+            -moz-appearance: textfield;
+            font-size: 1.1em;
+            flex: none;
+            height: 32px;
+        }
+        .qty-input::-webkit-outer-spin-button,
+        .qty-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        * { box-sizing: border-box; }
+        html, body { height: 100%; }
+        body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, Segoe UI, Inter, Roboto, Arial; -webkit-text-size-adjust: 100%; touch-action: manipulation; }
+        header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: linear-gradient(180deg, var(--panel), #0a1224); border-bottom: 1px solid var(--border); }
+        header h1 { margin: 0; font-size: 16px; display: flex; gap: 8px; align-items: center; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: var(--chip); border: 1px solid var(--border); font-size: 12px; color: var(--ink2); }
+        .actions { display: flex; gap: 6px; }
+        .icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border); background: var(--chip); color: var(--ink); cursor: pointer; }
+        .icon-btn.primary { background: linear-gradient(180deg, #16a34a, #15803d); border: none; }
+        .icon-btn.secondary { background: linear-gradient(180deg, #2563eb, #1d4ed8); border: none; }
+        .icon-btn.danger { background: linear-gradient(180deg, #ef4444, #dc2626); border: none; }
+        .icon-btn:active { transform: translateY(1px); }
+        svg { width: 16px; height: 16px; fill: currentColor; }
+        .toolbar { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; }
+        .search-row { display: flex; align-items: center; gap: 8px; }
+        .toolbar .chip, .toolbar select { background: var(--chip); border: 1px solid var(--border); color: var(--ink); padding: 8px 10px; border-radius: 10px; min-height: 36px; }
+        .toolbar .chip { flex: 1; }
+        main { padding: 0 12px 16px; max-width: 1100px; margin: 0 auto; }
+        .table-wrap { width: 100%; overflow: auto; border: 1px solid var(--border); border-radius: 12px; }
+        table { width: 100%; border-collapse: collapse; min-width: 760px; }
+        thead th { background: var(--panel); border-bottom: 1px solid var(--border); padding: 10px 8px; text-align: left; color: var(--ink2); font-weight: 600; }
+        tbody td { padding: 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        tbody tr { background: var(--row); }
+        tbody tr:nth-child(even) { background: var(--row2); }
+        .right { text-align: right; }
+        .num { font-variant-numeric: tabular-nums; }
+        .row-actions { display: flex; gap: 4px; justify-content: flex-end; }
+        .row-actions .icon-btn { width: 30px; height: 30px; border-radius: 8px; }
+        .summary { display: flex; align-items: center; justify-content: space-between; margin: 10px 2px 0; color: var(--ink2); flex-wrap: wrap; gap: 10px; }
+        .summary b { color: var(--ink); }
+        .summary-stats { display: flex; gap: 12px; align-items: center; }
+        .pager { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 0; }
+        .pager .icon-btn { width: auto; min-width: auto; padding: 0 10px; }
+        .cards { display: none; gap: 10px; margin-top: 10px; }
+        .card { background: var(--row); border: 1px solid var(--border); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+        .card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .card-title { font-weight: 700; }
+        .card-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+        .chip-badge { background: var(--chip); border: 1px solid var(--border); color: var(--ink2); padding: 4px 8px; border-radius: 999px; font-size: 12px; }
+        .card-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .metric {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px;
+        }
+        .metric .label { color: var(--ink2); font-size: 12px; }
+        .metric .value {
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+        .card-actions-row {
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0;
+    gap: 8px; /* <-- Проверь, что это есть у тебя в коде */
+}
+        .card-actions-row .card-icon-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 50px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--chip);
+            color: var(--ink);
+            cursor: pointer;
+            transition: transform 0.1s ease;
+            font-size: 1.2em;
+        }
+        .card-actions-row .card-icon-btn:active {
+            transform: translateY(1px);
+        }
+        .card-actions-row .card-icon-btn.primary {
+            background: linear-gradient(180deg, #16a34a, #15803d);
+            border: none;
+        }
+        .card-actions-row .card-icon-btn.danger {
+            background: linear-gradient(180deg, #ef4444, #dc2626);
+            border: none;
+        }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); align-items: center; justify-content: center; padding: 16px; z-index: 100; }
+        .dialog { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; max-width: 520px; width: 100%; padding: 14px; }
+        .dialog h3 { margin: 0 0 8px; }
+        .field { display: flex; flex-direction: column; margin-bottom: 8px; }
+        .field label { font-size: 12px; color: var(--ink2); margin-bottom: 4px; }
+        .field input, .field select { background: var(--chip); border: 1px solid var(--border); color: var(--ink); padding: 8px 10px; border-radius: 10px; }
+        .row { display: flex; gap: 8px; }
+        .col { flex: 1; }
+        #analyticsModal .dialog { max-width: 800px; max-height: 90vh; overflow-y: auto; }
+        #analyticsTabs { display: none; }
+        #chartContainer {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+        #barChart, #pieChart {
+            width: 100% !important;
+            max-width: 400px;
+            max-height: 250px;
+        }
+        #analyticsTable { margin-top: 12px; max-height: 200px; overflow-y: auto; }
+        #analyticsTable table { width: 100%; border-collapse: collapse; }
+        #analyticsTable th, #analyticsTable td { padding: 6px; border: 1px solid var(--border); text-align: left; }
+        #analyticsTable th { background: var(--panel); }
+        footer { text-align: center; color: var(--ink2); padding: 12px; }
+        .filter-selects {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .filter-selects.hidden {
+            display: none;
+        }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+        @media (max-width: 720px) {
+            .table-wrap { display: none; }
+            .cards { display: grid; }
+            .summary { flex-direction: column; align-items: flex-start; }
+            .summary-stats { order: 3; width: 100%; justify-content: space-between; }
+            .card-actions { display: none; }
+        }
+        @media (max-width: 480px) {
+    body { padding: 4px; }
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 4px;
+    }
+    .search-row {
+        flex-direction: row;
+    }
+    .toolbar .chip, .toolbar select {
+        width: 100%;
+        padding: 4px 6px;
+        font-size: 12px;
+        min-height: 30px;
+    }
+    .card-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 4px;
+    }
+    .metric {
+        padding: 4px;
+        font-size: 10px;
+    }
+    .metric .value { font-size: 12px; }
+    
+    /* ИСПРАВЛЕНИЕ: Делаем форму и кнопки в одну строку */
+    .card-bottom-row {
+        display: grid;
+        grid-template-columns: 50% auto; /* Изменили, чтобы форма была короче */
+        gap: 4px; /* <--- Вот этот отступ между полем и кнопками */
+        align-items: center;
+    }
+    
+    /* ИСПРАВЛЕНИЕ: Добавляем отступы между кнопками */
+    .card-actions-row {
+        grid-column: 2;
+        grid-row: 1;
+        display: flex;
+        gap: 12px; /* <--- Вот этот отступ между самими кнопками */
+        justify-content: center;
+        margin-top: 0;
+    }
+    
+    /* ИСПРАВЛЕНИЕ: Изменяем размер кнопок */
+    .card-actions-row .card-icon-btn {
+        width: 40px; 
+        height: 40px; 
+        padding: 0;
+        justify-content: center;
+        font-size: 12px;
+    }
+    
+    .summary {
+        flex-direction: column;
+        gap: 4px;
+    }
+    .summary-stats {
+        width: 100%;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    .pager .icon-btn {
+        padding: 4px 6px;
+        font-size: 12px;
+    }
 
+    /* ИСПРАВЛЕНИЕ: Делаем форму количества меньше */
+    .qty-input {
+        flex: none; 
+        height: 40px; 
+    }
+}
+    </style>
